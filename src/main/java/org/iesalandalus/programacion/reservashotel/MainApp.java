@@ -3,14 +3,20 @@ package org.iesalandalus.programacion.reservashotel;
 
 import org.iesalandalus.programacion.reservashotel.dominio.Habitacion;
 import org.iesalandalus.programacion.reservashotel.dominio.Huesped;
+import org.iesalandalus.programacion.reservashotel.dominio.Reserva;
+import org.iesalandalus.programacion.reservashotel.dominio.TipoHabitacion;
 import org.iesalandalus.programacion.reservashotel.negocio.Habitaciones;
 import org.iesalandalus.programacion.reservashotel.negocio.Huespedes;
 import org.iesalandalus.programacion.reservashotel.negocio.Reservas;
 import org.iesalandalus.programacion.reservashotel.vista.Opcion;
+import org.iesalandalus.programacion.utilidades.Entrada;
 
 import javax.naming.OperationNotSupportedException;
 
+import java.time.LocalDate;
+import java.time.chrono.ChronoLocalDate;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -50,11 +56,14 @@ public class MainApp {
             case BUSCAR_HABITACION -> buscarHabitacion();
             case BORRAR_HABITACION -> borrarHabitacion();
             case MOSTRAR_HABITACIONES -> mostrarHabitaciones();
-            /*case INSERTAR_RESERVA -> insertarReserva();
+            case INSERTAR_RESERVA -> insertarReserva();
             case ANULAR_RESERVA -> anularReserva();
             case MOSTRAR_RESERVAS -> mostrarReservas();
-            case CONSULTAR_DISPONIBILIDAD -> consultarDisponibilidad();
-             */
+            case CONSULTAR_DISPONIBILIDAD -> consultarDisponibilidad(
+                    leerTipoHabitacion(),
+                    leerFecha("Introduce la fecha de inicio de reserva (%s): "),
+                    leerFecha("Introduce la fecha de fin de reserva (%s): "));
+
         }
     }
 
@@ -182,5 +191,190 @@ public class MainApp {
         } else {
             System.out.println("No hay habitaciones que mostrar.");
         }
+    }
+
+    private static void insertarReserva(){
+        String mensaje = "Insertar reserva";
+        System.out.printf("%n%s%n", mensaje);
+        String cadena = "%0" + mensaje.length() + "d%n";
+        System.out.println(String.format(cadena, 0).replace("0", "-"));
+
+        try {
+            Reserva reserva = leerReserva();
+            Habitacion habitacionDisponible = consultarDisponibilidad(reserva.getHabitacion().getTipoHabitacion(),
+                    reserva.getFechaInicioReserva(), reserva.getFechaFinReserva());
+            if (!(habitacionDisponible==null)) {
+                reservas.insertar(reserva);
+                System.out.println("Reserva insertada correctamente.");
+            } else {
+                System.out.println("El tipo de habitación a reservar NO está disponible.");
+            }
+        } catch (OperationNotSupportedException|IllegalArgumentException|NullPointerException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void listarReservas(Huesped huesped){
+
+        if(!(huesped ==null)){
+            Reserva[] reservas1 = reservas.getReservas(huesped);
+
+            if (reservas1.length > 0) {
+                int i = 0;
+                for (Reserva reserva2 : reservas1) {
+                    System.out.println(i + ".- " + reserva2);
+                    i++;
+                }
+            } else {
+                System.out.println("No hay reservas que listar.");
+            }
+        } else {
+            System.out.println("El huésped no existe.");
+        }
+    }
+
+    private static void listarReservas(TipoHabitacion tipoHabitacion){
+
+        Reserva[] reservas1 = reservas.getReservas(tipoHabitacion);
+        if (!(reservas1==null)){
+            if (reservas1.length > 0) {
+                int i = 0;
+                for (Reserva reserva2 : reservas1) {
+                    System.out.println(i + ".- " + reserva2);
+                    i++;
+                }
+            } else {
+                System.out.println("No hay reservas que listar.");
+            }
+        } else {
+            System.out.println("No existe reserva.");
+        }
+    }
+
+    private static Reserva[] getReservasAnulables(Reserva[] reservasAAnular){
+        Reserva[] reservasAnulables = new Reserva[reservasAAnular.length];
+        int i = 0;
+        for (Reserva reserva2 : reservasAAnular) {
+            if(reserva2.getFechaInicioReserva().isAfter(LocalDate.now())){
+                reservasAnulables[i] = reserva2;
+                i++;
+            }
+        }
+        return reservasAnulables;
+    }
+
+    private static void anularReserva(){
+        char confReserva = 'S';
+        try {
+            Huesped huesped = leerClientePorDni();
+            Huesped huesped1 = huespedes.buscar(huesped);
+            if (huesped1 != null) {
+                Reserva[] reservas1 = reservas.getReservas(huesped);
+                reservas1 = getReservasAnulables(reservas1);
+                if (reservas1.length > 0) {
+                    //listarReservas(huesped1);
+                    System.out.println("Elija la reserva que desea anular.");
+                    int numReserva = Entrada.entero();
+
+                    if (reservas1.length == 1){
+                        System.out.println("Confirma que desea anular la reserva (S/N)?");
+                        confReserva = Entrada.caracter();
+                    }
+                    if (confReserva=='S'){
+                        reservas.borrar(reservas1[numReserva]);
+                    }
+                } else {
+                    System.out.println("No hay reservas que se puedan anular.");
+                }
+            } else {
+                System.out.println("No existe ningún huésped con dicho DNI.");
+            }
+        }catch(IllegalArgumentException | NullPointerException | OperationNotSupportedException e)
+        {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void mostrarReservas(){
+        Reserva[] listaReserva = reservas.get();
+        if (listaReserva.length > 0) {
+            for (Reserva reserva1 : listaReserva) {
+                System.out.println(reserva1);
+            }
+        } else {
+            System.out.println("No hay reservas que mostrar.");
+        }
+    }
+
+    private static Habitacion consultarDisponibilidad(TipoHabitacion tipoHabitacion,
+                                                LocalDate fechaInicioReserva,
+                                                LocalDate fechaFinReserva){
+        try {
+
+            if (tipoHabitacion == null) {
+                throw new NullPointerException("ERROR: No se puede consultar la disponibilidad de un tipo de habitación nulo.");
+            }
+            if (fechaInicioReserva.isBefore(LocalDate.now())) {
+                throw new NullPointerException("ERROR: La fecha de inicio no debe ser anterior al día de hoy.");
+            }
+            if (!fechaFinReserva.isAfter(fechaInicioReserva)) {
+                throw new NullPointerException("ERROR: La fecha de fin de reserva debe ser posterior a la fecha de inicio de reserva.");
+            }
+
+
+            Habitacion[] habitacionesTipoSolicitado = null;
+            int i = 0;
+            for (Habitacion habitacion : habitaciones.get()){
+                if(!(habitacion.getTipoHabitacion().equals(tipoHabitacion))) {
+                    habitacionesTipoSolicitado[i] = habitacion;
+                    i++;
+                }
+            }
+
+            if (habitacionesTipoSolicitado==null){
+                return null;
+            } else {
+                for (Habitacion habitacion : habitacionesTipoSolicitado){
+                    Reserva[] reservasFuturas = reservas.getReservasFuturas(habitacion);
+                    int numElementosNoNulos = (int) Arrays.stream(reservasFuturas).filter(Objects::nonNull).count();
+                    if (numElementosNoNulos==0) {
+                        return habitacion;
+                    } else {
+                        Arrays.sort(reservasFuturas, 0, numElementosNoNulos,
+                                Comparator.comparing(Reserva::getFechaFinReserva).reversed());
+
+                        if (fechaInicioReserva.isAfter(reservasFuturas[0].getFechaFinReserva())){
+                            return habitacion;
+                        } else {
+                            Arrays.sort(reservasFuturas, 0, numElementosNoNulos,
+                                    Comparator.comparing(Reserva::getFechaInicioReserva));
+
+                            if (fechaFinReserva.isBefore(reservasFuturas[0].getFechaInicioReserva())){
+                                return habitacion;
+                            } else {
+                                Habitacion habitacionDisponible = null;
+                                boolean tipoHabitacionEncontrada = false;
+                                for(int j=1;j<reservasFuturas.length && !tipoHabitacionEncontrada;j++)
+                                {
+                                    if (reservasFuturas[j]!=null && reservasFuturas[j-1]!=null)
+                                    {
+                                        if(fechaInicioReserva.isAfter(reservasFuturas[j-1].getFechaFinReserva()) &&
+                                                fechaFinReserva.isBefore(reservasFuturas[j].getFechaInicioReserva()))
+                                        {
+                                            habitacionDisponible = new Habitacion(habitacionesTipoSolicitado[i]);
+                                            tipoHabitacionEncontrada = true;
+                                        }
+                                    }
+                                }
+                                return habitacionDisponible;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (IllegalArgumentException | NullPointerException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
     }
 }
