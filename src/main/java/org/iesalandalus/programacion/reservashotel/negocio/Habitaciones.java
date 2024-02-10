@@ -62,7 +62,7 @@ public class Habitaciones {
         int indice = 0;
         boolean habitacionEncontrada = false;
         while (!tamanoSuperado(indice) && !habitacionEncontrada) {
-            if (habitacion.equals(get()[indice])) {
+            if (get()[indice].equals(habitacion)) {
                 habitacionEncontrada = true;
             } else {
                 indice++;

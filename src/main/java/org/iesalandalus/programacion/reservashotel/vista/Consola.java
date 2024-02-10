@@ -176,8 +176,11 @@ public class Consola {
 
     public static Regimen leerRegimen(){
         int ordinalRegimen;
+        for (Regimen regimen: Regimen.values()) {
+            System.out.println(regimen.ordinal() + ".- " + regimen);
+        }
         do {
-            System.out.println(Arrays.toString(Regimen.values()));
+            //System.out.println(Arrays.toString(Regimen.values()));
             System.out.println("\nElige un régimen: ");
             ordinalRegimen = Entrada.entero();
         } while (!(ordinalRegimen >= 0 && ordinalRegimen <= (Regimen.values().length - 1)));
@@ -192,7 +195,7 @@ public class Consola {
         Regimen regimen = null;
         int numeroPersonas;
 
-        try {
+        //try {
 
             huesped = leerHuesped();
             habitacion = leerHabitacion();
@@ -209,11 +212,11 @@ public class Consola {
 
             reserva = new Reserva(huesped, habitacion, regimen, fechaInicioReserva,
                     fechaFinReserva, numeroPersonas);
-        }
+        /*}
         catch(IllegalArgumentException | NullPointerException e)
         {
             System.out.println(e.getMessage());
-        }
+        }*/
         return new Reserva(reserva);
     }
 

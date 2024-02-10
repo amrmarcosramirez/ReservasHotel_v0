@@ -204,6 +204,7 @@ public class MainApp {
             Habitacion habitacionDisponible = consultarDisponibilidad(reserva.getHabitacion().getTipoHabitacion(),
                     reserva.getFechaInicioReserva(), reserva.getFechaFinReserva());
             if (!(habitacionDisponible==null)) {
+                reserva.setHabitacion(habitacionDisponible);
                 reservas.insertar(reserva);
                 System.out.println("Reserva insertada correctamente.");
             } else {
@@ -215,36 +216,26 @@ public class MainApp {
     }
 
     private static void listarReservas(Huesped huesped){
+        Reserva[] reservas1 = reservas.getReservas(huesped);
 
-        if(!(huesped ==null)){
-            Reserva[] reservas1 = reservas.getReservas(huesped);
-
-            if (reservas1.length > 0) {
-                int i = 0;
-                for (Reserva reserva2 : reservas1) {
-                    System.out.println(i + ".- " + reserva2);
-                    i++;
-                }
-            } else {
-                System.out.println("No hay reservas que listar.");
+        if (reservas1.length > 0) {
+            int i = 0;
+            for (Reserva reserva2 : reservas1) {
+                System.out.println(i + ".- " + reserva2);
+                i++;
             }
         } else {
-            System.out.println("El huésped no existe.");
+            System.out.println("No hay reservas que listar.");
         }
     }
 
     private static void listarReservas(TipoHabitacion tipoHabitacion){
-
         Reserva[] reservas1 = reservas.getReservas(tipoHabitacion);
-        if (!(reservas1==null)){
-            if (reservas1.length > 0) {
-                int i = 0;
-                for (Reserva reserva2 : reservas1) {
-                    System.out.println(i + ".- " + reserva2);
-                    i++;
-                }
-            } else {
-                System.out.println("No hay reservas que listar.");
+        if (reservas1.length > 0){
+            int i = 0;
+            for (Reserva reserva2 : reservas1) {
+                System.out.println(i + ".- " + reserva2);
+                i++;
             }
         } else {
             System.out.println("No existe reserva.");
@@ -269,10 +260,14 @@ public class MainApp {
             Huesped huesped = leerClientePorDni();
             Huesped huesped1 = huespedes.buscar(huesped);
             if (huesped1 != null) {
-                Reserva[] reservas1 = reservas.getReservas(huesped);
+                Reserva[] reservas1 = reservas.getReservas(huesped1);
                 reservas1 = getReservasAnulables(reservas1);
                 if (reservas1.length > 0) {
-                    //listarReservas(huesped1);
+                    int i = 0;
+                    for (Reserva reserva2 : reservas1) {
+                        System.out.println(i + ".- " + reserva2);
+                        i++;
+                    }
                     System.out.println("Elija la reserva que desea anular.");
                     int numReserva = Entrada.entero();
 
@@ -282,6 +277,9 @@ public class MainApp {
                     }
                     if (confReserva=='S'){
                         reservas.borrar(reservas1[numReserva]);
+                        System.out.println("Reserva anulada correctamente.");
+                    } else {
+                        System.out.println("La reserva no ha sido anulada.");
                     }
                 } else {
                     System.out.println("No hay reservas que se puedan anular.");
@@ -320,7 +318,6 @@ public class MainApp {
             if (!fechaFinReserva.isAfter(fechaInicioReserva)) {
                 throw new NullPointerException("ERROR: La fecha de fin de reserva debe ser posterior a la fecha de inicio de reserva.");
             }
-
 
             Habitacion[] habitacionesTipoSolicitado = null;
             int i = 0;
@@ -361,7 +358,7 @@ public class MainApp {
                                         if(fechaInicioReserva.isAfter(reservasFuturas[j-1].getFechaFinReserva()) &&
                                                 fechaFinReserva.isBefore(reservasFuturas[j].getFechaInicioReserva()))
                                         {
-                                            habitacionDisponible = new Habitacion(habitacionesTipoSolicitado[i]);
+                                            habitacionDisponible = new Habitacion(habitacionesTipoSolicitado[j]);
                                             tipoHabitacionEncontrada = true;
                                         }
                                     }

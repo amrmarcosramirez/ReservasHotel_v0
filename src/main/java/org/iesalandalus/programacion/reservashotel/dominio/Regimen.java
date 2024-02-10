@@ -24,7 +24,7 @@ public enum Regimen {
     //Método toString
     @Override
     public String toString() {
-        return String.format("Régimen[descripción=%s, incremento precio=%s]",
+        return String.format("Régimen: %s, incremento precio: %s",
                 this.descripcion, getIncrementoPrecio());
     }
 }
